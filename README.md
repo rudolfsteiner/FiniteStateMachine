@@ -3,33 +3,33 @@
 ### Set up
 - Check python version. It should match the version in the `.python-version` file:
 ```
- python --version
+  python --version
 ```
 - If it says the python version is not installed, install it by running:
 ```
-pyenv install
+  pyenv install
 ```
 
 - Init virtual environment
 
 ```
-python -m venv venv
-source venv/bin/activate
+  python -m venv venv
+  source venv/bin/activate
 ```
 - Config:
 
 ```
-pip install -r requirements.in
+  pip install -r requirements.in
 ```
 
 ## Development
 
 This can be tested locally by running the tests. To run the full suite of tests:
 ```
-PYTHONPATH=. pytest
+  PYTHONPATH=. pytest
 ```
 
 ## Run
 ```
-python3 app.py
+  python3 app.py
 ```
