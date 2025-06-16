@@ -9,7 +9,6 @@ input_empty = ""
 input_wrongchar1 = "1201"
 input_wrongchar2 = "01 1"
 
-# m3 = ModThreeFA()
 
 def test_ModThreeFA():
     m3 = ModThreeFA()
