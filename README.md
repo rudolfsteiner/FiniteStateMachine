@@ -1,6 +1,6 @@
 ## Finite Automation
 
-### Once for project
+### Set up
 - Check python version. It should match the version in the `.python-version` file:
 ```
  python --version
@@ -15,10 +15,12 @@ pyenv install
 ```
 python -m venv venv
 source venv/bin/activate
+```
+- Config:
 
-To configure, run:
 ```
 pip install -r requirements.in
+```
 
 ## Development
 
