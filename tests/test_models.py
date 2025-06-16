@@ -1,5 +1,5 @@
 import pytest
-from statemachine import ModThreeFA
+from statemachine import ModThreeFA, StateMachine
 
 input1 = "11101"
 input2 = "00100"
@@ -20,3 +20,5 @@ def test_ModThreeFA():
     assert m3.run(input_empty) == False
     assert m3.run(input_wrongchar1) == False
     assert m3.run(input_wrongchar2) == False
+
+    assert m3.stateMachine.startState == "S0_STATE"

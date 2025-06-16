@@ -25,10 +25,15 @@ class StateMachine:
         :param name: name of the start state
         :return:
         """
+        if name.upper() not in self.handlers.keys():
+            raise ValueError(f"Please add state {name.upper} before set it as the start state")
         self.startState = name.upper()
 
     def run(self, cargo):
         """
+        Processing input string
+        If there is end states, uses end_condition to mark the end state.
+        Set the end_condition True if all the char is processed.
         :param cargo: alphabet string input
         :return: name of the end state if successful, else False
         """
@@ -52,13 +57,13 @@ class ModThreeFA:
     def __init__(self, logger=None):
         self.logger = logger
         self.alphabet = ["0", "1"]
-        self.state_value = {"s0_state": 0, "s1_state": 1, "s2_state": 2}
+        self.stateValue = {"s0_state": 0, "s1_state": 1, "s2_state": 2}
         self.states = ["s0_state", "s1_state", "s2_state"]
-        self.statemachine = StateMachine(logger)
-        self.statemachine.add_state("s0_state", s0_transitions)
-        self.statemachine.add_state("s1_state", s1_transitions)
-        self.statemachine.add_state("s2_state", s2_transitions)
-        self.statemachine.set_start("s0_state")
+        self.stateMachine = StateMachine(logger)
+        self.stateMachine.add_state("s0_state", s0_transitions)
+        self.stateMachine.add_state("s1_state", s1_transitions)
+        self.stateMachine.add_state("s2_state", s2_transitions)
+        self.stateMachine.set_start("s0_state")
 
     def run(self, input_string:str):
         if len(input_string) == 0:
@@ -74,14 +79,14 @@ class ModThreeFA:
                     f"Error: input -- input_string at index {str(i + 1)} is not in alphabet {str(self.alphabet)} list")
                 return False  # Invalid input symbol
 
-        last_state = self.statemachine.run(input_string)
+        last_state = self.stateMachine.run(input_string)
 
         if last_state not in self.states:
             if self.logger:
                 self.logger.error(f"the final state -- {last_state} is not a known state")
             print(f"Error: the final state -- {last_state} is not a known state")
 
-        return self.state_value[last_state]
+        return self.stateValue[last_state]
 
 
 def s0_transitions(x:str):
@@ -95,18 +100,18 @@ def s0_transitions(x:str):
     """
     end_condition = False
     if len(x) == 0:
-        return ("s0_state", "", True)
+        raise ValueError("Empty Input")
 
     bit = int(x[0])
     if bit == 1:
-        newState = "s1_state"
+        new_state = "s1_state"
     else:
-        newState = "s0_state"
+        new_state = "s0_state"
 
     if len(x[1:]) == 0:
         end_condition = True
 
-    return (newState, x[1:], end_condition)
+    return (new_state, x[1:], end_condition)
 
 def s1_transitions(x:str):
     """
@@ -119,16 +124,16 @@ def s1_transitions(x:str):
     """
     end_condition = False
     if len(x) == 0:
-        return ("s1_state", "", True)
+        raise ValueError("Empty Input")
     bit = int(x[0])
     if bit == 1:
-        newState = "s0_state"
+        new_state = "s0_state"
     else:
-        newState = "s2_state"
+        new_state = "s2_state"
 
     if len(x[1:]) == 0:
         end_condition = True
-    return (newState, x[1:], end_condition)
+    return (new_state, x[1:], end_condition)
 
 def s2_transitions(x:str):
     """
@@ -142,15 +147,15 @@ def s2_transitions(x:str):
 
     end_condition = False
     if len(x) == 0:
-        return ("s2_state", "", True)
+        raise ValueError("Empty Input")
 
     bit = int(x[0])
     if bit == 1:
-        newState = "s2_state"
+        new_state = "s2_state"
     else:
-        newState = "s1_state"
+        new_state = "s1_state"
 
     if len(x[1:]) == 0:
         end_condition = True
-    return (newState, x[1:], end_condition)
+    return (new_state, x[1:], end_condition)
 
