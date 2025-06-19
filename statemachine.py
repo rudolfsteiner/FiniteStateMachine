@@ -1,40 +1,6 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-
-
-# the context class contains a _state that references the concrete state and setState method to change between states.
-class Context:
-
-    _state = None
-
-    @property
-    def state(self) -> State:
-        return self._state
-
-    def __init__(self, state: State) -> None:
-        self.set_state(state)
-
-    def set_state(self, state: State):
-        # print(f"Context: Transitioning to {type(state).__name__}")
-        self._state = state
-        self._state.context = self
-
-    def handle(self, cargo=None):
-        self._state.handle(cargo)
-
-
-class State(ABC):
-    @property
-    def context(self) -> Context:
-        return self._context
-
-    @context.setter
-    def context(self, context: Context) -> None:
-        self._context = context
-
-    @abstractmethod
-    def handle(self, cargo) -> None:
-        pass
+from state_pattern import Context, State
 
 
 class S0State(State):
@@ -68,19 +34,20 @@ class S2State(State):
 
 
 class FiniteStateMachine:
-    _context = None
+    _context = None # handle the state pattern
 
-    def __init__(self, context):
+    def __init__(self, context, alphabet):
         self._context = context
+        self._alphabet = alphabet
 
+    @abstractmethod
     def handle(self, cargo):
         pass
 
 
 class D3FSM(FiniteStateMachine):
-    def __init__(self, context=Context(S0State()), logger=None):
-        super().__init__(context)
-        self.alphabet = ["0", "1"]
+    def __init__(self, context=Context(S0State()), alphabet=("0", "1"), logger=None):
+        super().__init__(context, alphabet)
         self.stateValue = {"S0State": 0, "S1State": 1, "S2State": 2}
         self.logger = logger
 
@@ -94,11 +61,11 @@ class D3FSM(FiniteStateMachine):
 
         # check any non-1/0 char
         for i in range(len(cargo)):
-            if cargo[i] not in self.alphabet:
+            if cargo[i] not in self._alphabet:
                 if self.logger:
-                    self.logger.error(f"input at index {str(i)} is not in alphabet {str(self.alphabet)} list")
+                    self.logger.error(f"input at index {str(i)} is not in alphabet {str(self._alphabet)} list")
                 print(
-                    f"Error: input -- cargo at index {str(i + 1)} is not in alphabet {str(self.alphabet)} list")
+                    f"Error: input -- cargo at index {str(i + 1)} is not in alphabet {str(self._alphabet)} list")
                 return False  # Invalid input symbol
 
         for char in cargo:

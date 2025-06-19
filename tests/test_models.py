@@ -1,5 +1,6 @@
 import pytest
-from statemachine import D3FSM, Context, State, S0State, S1State, S2State #ModThreeFA, StateMachine
+from statemachine import D3FSM, S0State, S1State, S2State
+from state_pattern import Context
 
 input1 = "11101"
 input2 = "00100"
@@ -49,21 +50,3 @@ def test_D3FSM_transition():
     m3._context.set_state(S2State())
     m3._context.state.handle(0)
     assert type(m3._context.state).__name__ == "S1State"
-
-
-
-def test_State_setter():
-    s0 = S0State()
-    c0 = Context(s0)
-    s0.context = c0
-    assert s0.context == c0
-
-
-def test_Context_set_state():
-    s0 = S0State()
-    c0 = Context(s0)
-    s0.context = c0
-    s2 = S2State()
-    s0.context.set_state(s2)
-    assert s0.context == c0
-    assert s0.context.state == s2
