@@ -1,5 +1,5 @@
 import pytest
-from statemachine import ModThreeFA, StateMachine
+from statemachine import D3FSM, Context, State, S0State, S1State, S2State #ModThreeFA, StateMachine
 
 input1 = "11101"
 input2 = "00100"
@@ -10,15 +10,60 @@ input_wrongchar1 = "1201"
 input_wrongchar2 = "01 1"
 
 
-def test_ModThreeFA():
-    m3 = ModThreeFA()
+def test_D3FSM_handle():
+    m3 = D3FSM()
 
-    assert m3.run(input1) == 2
-    assert m3.run(input2) == 1
-    assert m3.run(input3) == 0
+    assert m3.handle(input1) == 2
+    m3.reset()
+    assert m3.handle(input2) == 1
+    m3.reset()
+    assert m3.handle(input3) == 0
+    m3.reset()
 
-    assert m3.run(input_empty) == False
-    assert m3.run(input_wrongchar1) == False
-    assert m3.run(input_wrongchar2) == False
+    assert m3.handle(input_empty) == False
+    m3.reset()
+    assert m3.handle(input_wrongchar1) == False
+    m3.reset()
+    assert m3.handle(input_wrongchar2) == False
 
-    assert m3.stateMachine.startState == "S0_STATE"
+
+def test_D3FSM_transition():
+    m3 = D3FSM()
+
+    m3._context.state.handle(1)
+    assert type(m3._context.state).__name__ == "S1State"
+    m3._context.set_state(S0State())
+    m3._context.state.handle(0)
+    assert type(m3._context.state).__name__ == "S0State"
+
+    m3._context.set_state(S1State())
+    m3._context.state.handle(1)
+    assert type(m3._context.state).__name__ == "S0State"
+    m3._context.set_state(S1State())
+    m3._context.state.handle(0)
+    assert type(m3._context.state).__name__ == "S2State"
+
+    m3._context.set_state(S2State())
+    m3._context.state.handle(1)
+    assert type(m3._context.state).__name__ == "S2State"
+    m3._context.set_state(S2State())
+    m3._context.state.handle(0)
+    assert type(m3._context.state).__name__ == "S1State"
+
+
+
+def test_State_setter():
+    s0 = S0State()
+    c0 = Context(s0)
+    s0.context = c0
+    assert s0.context == c0
+
+
+def test_Context_set_state():
+    s0 = S0State()
+    c0 = Context(s0)
+    s0.context = c0
+    s2 = S2State()
+    s0.context.set_state(s2)
+    assert s0.context == c0
+    assert s0.context.state == s2

@@ -1,161 +1,116 @@
-class StateMachine:
-
-    def __init__(self, logger=None):
-        self.handlers = {}
-        self.startState = None
-        self.endStates = []
-        self.logger = logger
-
-    def add_state(self, name, handler, end_state=0):
-        """
-        add state
-        :param name: name of the state
-        :param handler: transition funtion
-        :param end_state: 1 if it is a end state, 0 otherwise
-        :return:
-        """
-        name = name.upper()
-        self.handlers[name] = handler
-        if end_state:
-            self.endStates.append(name)
-
-    def set_start(self, name):
-        """
-        must call .set_start() before .run()
-        :param name: name of the start state
-        :return:
-        """
-        if name.upper() not in self.handlers.keys():
-            raise ValueError(f"Please add state {name.upper} before set it as the start state")
-        self.startState = name.upper()
-
-    def run(self, cargo):
-        """
-        Processing input string
-        If there is end states, uses end_condition to mark the end state.
-        Set the end_condition True if all the char is processed.
-        :param cargo: alphabet string input
-        :return: name of the end state if successful, else False
-        """
-        try:
-            handler = self.handlers[self.startState]
-        except:
-            if self.logger:
-                self.logger.error("Must call .set_start() before .run()")
-            return False
-
-        while True:
-            (newState, cargo, endcondition) = handler(cargo)
-
-            if (newState.upper() in self.endStates) or endcondition:
-                return newState
-            else:
-                handler = self.handlers[newState.upper()]
+from __future__ import annotations
+from abc import ABC, abstractmethod
 
 
-class ModThreeFA:
-    def __init__(self, logger=None):
-        self.logger = logger
+# the context class contains a _state that references the concrete state and setState method to change between states.
+class Context:
+
+    _state = None
+
+    @property
+    def state(self) -> State:
+        return self._state
+
+    def __init__(self, state: State) -> None:
+        self.set_state(state)
+
+    def set_state(self, state: State):
+        # print(f"Context: Transitioning to {type(state).__name__}")
+        self._state = state
+        self._state.context = self
+
+    def handle(self, cargo=None):
+        self._state.handle(cargo)
+
+
+class State(ABC):
+    @property
+    def context(self) -> Context:
+        return self._context
+
+    @context.setter
+    def context(self, context: Context) -> None:
+        self._context = context
+
+    @abstractmethod
+    def handle(self, cargo) -> None:
+        pass
+
+
+class S0State(State):
+    def handle(self, cargo):
+        if cargo == 1:
+            self._context.set_state(S1State())
+        elif cargo == 0:
+            self._context.set_state(self)
+        else:
+            raise ValueError(f"Wrong Cargo value: {cargo}, should be 1/0")
+
+
+class S1State(State):
+    def handle(self, cargo):
+        if cargo == 1:
+            self._context.set_state(S0State())
+        elif cargo == 0:
+            self._context.set_state(S2State())
+        else:
+            raise ValueError(f"Wrong Cargo value: {cargo}, should be 1/0")
+
+
+class S2State(State):
+    def handle(self, cargo):
+        if cargo == 1:
+            self._context.set_state(self)
+        elif cargo == 0:
+            self._context.set_state(S1State())
+        else:
+            raise ValueError(f"Wrong Cargo value: {cargo}, should be 1/0")
+
+
+class FiniteStateMachine:
+    _context = None
+
+    def __init__(self, context):
+        self._context = context
+
+    def handle(self, cargo):
+        pass
+
+
+class D3FSM(FiniteStateMachine):
+    def __init__(self, context=Context(S0State()), logger=None):
+        super().__init__(context)
         self.alphabet = ["0", "1"]
-        self.stateValue = {"s0_state": 0, "s1_state": 1, "s2_state": 2}
-        self.states = ["s0_state", "s1_state", "s2_state"]
-        self.stateMachine = StateMachine(logger)
-        self.stateMachine.add_state("s0_state", s0_transitions)
-        self.stateMachine.add_state("s1_state", s1_transitions)
-        self.stateMachine.add_state("s2_state", s2_transitions)
-        self.stateMachine.set_start("s0_state")
+        self.stateValue = {"S0State": 0, "S1State": 1, "S2State": 2}
+        self.logger = logger
 
-    def run(self, input_string:str):
-        if len(input_string) == 0:
+    def handle(self, cargo: str):
+        # check empty input
+        if len(cargo) == 0:
             if self.logger:
                 self.logger.error(f"Empty Input")
             print(f"Error: Empty Input")
             return False  # Invalid input symbol
-        for i in range(len(input_string)):
-            if input_string[i] not in self.alphabet:
+
+        # check any non-1/0 char
+        for i in range(len(cargo)):
+            if cargo[i] not in self.alphabet:
                 if self.logger:
                     self.logger.error(f"input at index {str(i)} is not in alphabet {str(self.alphabet)} list")
                 print(
-                    f"Error: input -- input_string at index {str(i + 1)} is not in alphabet {str(self.alphabet)} list")
+                    f"Error: input -- cargo at index {str(i + 1)} is not in alphabet {str(self.alphabet)} list")
                 return False  # Invalid input symbol
 
-        last_state = self.stateMachine.run(input_string)
+        for char in cargo:
+            self._context.handle(int(char))
 
-        if last_state not in self.states:
-            if self.logger:
-                self.logger.error(f"the final state -- {last_state} is not a known state")
-            print(f"Error: the final state -- {last_state} is not a known state")
-
-        return self.stateValue[last_state]
+        return self.stateValue[type(self._context.state).__name__]
 
 
-def s0_transitions(x:str):
-    """
-    transition for s0 state
-    :param x: input string
-    :return:
-        new state,
-        input string for the next transition function
-        True if all alphabet processed, thus reach the end state, False otherwise
-    """
-    end_condition = False
-    if len(x) == 0:
-        raise ValueError("Empty Input")
-
-    bit = int(x[0])
-    if bit == 1:
-        new_state = "s1_state"
-    else:
-        new_state = "s0_state"
-
-    if len(x[1:]) == 0:
-        end_condition = True
-
-    return (new_state, x[1:], end_condition)
-
-def s1_transitions(x:str):
-    """
-    transition for s1 state
-    :param x: input string
-    :return:
-        new state,
-        input string for the next transition function
-        True if all alphabet processed, thus reach the end state, False otherwise
-    """
-    end_condition = False
-    if len(x) == 0:
-        raise ValueError("Empty Input")
-    bit = int(x[0])
-    if bit == 1:
-        new_state = "s0_state"
-    else:
-        new_state = "s2_state"
-
-    if len(x[1:]) == 0:
-        end_condition = True
-    return (new_state, x[1:], end_condition)
-
-def s2_transitions(x:str):
-    """
-    transition for s2 state
-    :param x: input string
-    :return:
-        new state,
-        input string for the next transition function
-        True if all alphabet processed, thus reach the end state, False otherwise
-    """
-
-    end_condition = False
-    if len(x) == 0:
-        raise ValueError("Empty Input")
-
-    bit = int(x[0])
-    if bit == 1:
-        new_state = "s2_state"
-    else:
-        new_state = "s1_state"
-
-    if len(x[1:]) == 0:
-        end_condition = True
-    return (new_state, x[1:], end_condition)
+    def reset(self):
+        """
+        back to the initial stage S0State
+        :return:
+        """
+        self._context.set_state(S0State())
 

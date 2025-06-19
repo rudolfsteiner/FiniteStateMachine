@@ -1,20 +1,31 @@
-from statemachine import s0_transitions, s1_transitions, s2_transitions
+from statemachine import Context, State, S0State, S1State, S2State
 
-input_s0_1 = "101"
-input_s0_0 = "0"
-input_s1_1 = "1"
-input_s1_0 = "010"
-input_s2_1 = "111"
-input_s2_0 = "010"
 
-def test_transitions():
-    assert s0_transitions(input_s0_1) == ('s1_state', '01', False)
-    assert s0_transitions(input_s0_0) == ('s0_state', '', True)
-    assert s1_transitions(input_s1_1) == ('s0_state', '', True)
-    assert s1_transitions(input_s1_0) == ('s2_state', '10', False)
-    assert s2_transitions(input_s2_1) == ('s2_state', '11', False)
-    assert s2_transitions(input_s2_0) == ('s1_state', '10', False)
+def test_S0State():
+    s0 = S0State()
+    s0.context=Context(s0)
+    s0.handle(1)
+    assert type(s0._context.state).__name__ == "S1State"
+    s0.handle(0)
+    assert type(s0._context.state).__name__ == "S0State"
 
+
+def test_S1State():
+    s1 = S1State()
+    s1.context=Context(s1)
+    s1.handle(1)
+    assert type(s1._context.state).__name__ == "S0State"
+    s1.handle(0)
+    assert type(s1._context.state).__name__ == "S2State"
+
+
+def test_S2State():
+    s2 = S2State()
+    s2.context=Context(s2)
+    s2.handle(1)
+    assert type(s2._context.state).__name__ == "S2State"
+    s2.handle(0)
+    assert type(s2._context.state).__name__ == "S1State"
 
 
 
